@@ -23,9 +23,26 @@ jobs:
 
       - name: Fetch third-party dependencies
         run: |
-          git clone --depth 1 https://github.com/FliPPeh/cNBT.git source/cNBT
-          git clone --depth 1 https://github.com/lvandeve/lodepng.git source/lodepng
-          git clone --depth 1 https://github.com/kgabis/parson.git source/parson
+          git clone --depth 1 https://github.com/FliPPeh/cNBT.git         source/cNBT
+          git clone --depth 1 https://github.com/lvandeve/lodepng.git     source/lodepng
+          git clone --depth 1 https://github.com/kgabis/parson.git        source/parson
+          git clone --depth 1 https://github.com/recp/cglm.git            /tmp/cglm
+          git clone --depth 1 https://github.com/P-p-H-d/mlib.git         /tmp/mlib
+
+          # cNBT ships a main_test.c that would collide with source/main.c at link time
+          rm -f source/cNBT/main_test.c
+
+          # lodepng ships benchmark/fuzzer/unittest/pngdetail .cpp files the Makefile would pick up
+          find source/lodepng -mindepth 1 -maxdepth 1 \
+            ! -name 'lodepng.c' ! -name 'lodepng.h' -exec rm -rf {} +
+
+          # cglm is header-only; the source includes it as "cglm/cglm.h" relative to source/
+          mkdir -p source/cglm
+          cp -r /tmp/cglm/include/cglm/. source/cglm/
+
+          # M*LIB headers are included as <m-lib/m-array.h> etc.; install into portlibs so -I resolves them
+          mkdir -p "$DEVKITPRO/portlibs/ppc/include/m-lib"
+          cp /tmp/mlib/m-*.h "$DEVKITPRO/portlibs/ppc/include/m-lib/"
 
       - name: Build fCavEX.dol
         run: make -j"$(nproc)"
