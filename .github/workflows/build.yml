@@ -1,0 +1,52 @@
+name: Build Wii Homebrew
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build fCavEX for Wii
+    runs-on: ubuntu-latest
+    container:
+      image: devkitpro/devkitppc:latest
+    env:
+      DEVKITPRO: /opt/devkitpro
+      DEVKITPPC: /opt/devkitpro/devkitPPC
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Fetch third-party dependencies
+        run: |
+          git clone --depth 1 https://github.com/FliPPeh/cNBT.git source/cNBT
+          git clone --depth 1 https://github.com/lvandeve/lodepng.git source/lodepng
+          git clone --depth 1 https://github.com/kgabis/parson.git source/parson
+
+      - name: Build fCavEX.dol
+        run: make -j"$(nproc)"
+
+      - name: Stage homebrew package
+        run: |
+          mkdir -p dist/fCavEX
+          cp fCavEX.dol      dist/fCavEX/boot.dol
+          cp meta.xml        dist/fCavEX/meta.xml
+          cp icon.png        dist/fCavEX/icon.png
+          cp config_wii.json dist/fCavEX/config.json
+          cp -r assets       dist/fCavEX/assets
+
+      - name: Create homebrew zip
+        run: |
+          cd dist/fCavEX
+          zip -r ../fCavEX.zip .
+
+      - name: Upload homebrew zip artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: fCavEX-homebrew
+          path: dist/fCavEX.zip
+          if-no-files-found: error
