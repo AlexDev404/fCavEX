@@ -29,10 +29,13 @@ jobs:
           git clone --depth 1 https://github.com/recp/cglm.git            /tmp/cglm
           git clone --depth 1 https://github.com/P-p-H-d/mlib.git         /tmp/mlib
 
-          # cNBT ships a main_test.c that would collide with source/main.c at link time
-          rm -f source/cNBT/main_test.c
+          # cNBT ships several test programs (each with its own main()) alongside the library sources
+          rm -f source/cNBT/main_test.c source/cNBT/afl_check.c \
+                source/cNBT/check.c      source/cNBT/tests.c
 
-          # lodepng ships benchmark/fuzzer/unittest/pngdetail .cpp files the Makefile would pick up
+          # Upstream lodepng is distributed as C++ (lodepng.cpp); CavEX compiles it as C
+          mv source/lodepng/lodepng.cpp source/lodepng/lodepng.c
+          # Strip benchmark/fuzzer/unittest/pngdetail .cpp files the Makefile would otherwise pick up
           find source/lodepng -mindepth 1 -maxdepth 1 \
             ! -name 'lodepng.c' ! -name 'lodepng.h' -exec rm -rf {} +
 
