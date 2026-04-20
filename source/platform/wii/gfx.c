@@ -201,11 +201,14 @@ void gfx_update_light(float daytime, const float* light_lookup) {
 	assert(daytime > -GLM_FLT_EPSILON && daytime < 1.0F + GLM_FLT_EPSILON
 		   && light_lookup);
 
+	/* Moonlight floor + ambient: keep the world visible at night. See PC path. */
+	float sky_level = fmaxf(daytime, 0.2F);
+	const float ambient = 0.04F;
 	for(int sky = 0; sky < 16; sky++) {
 		for(int torch = 0; torch < 16; torch++) {
-			uint8_t gray
-				= roundf(fmaxf(light_lookup[torch], light_lookup[sky] * daytime)
-						 * 255.0F);
+			float v = fmaxf(light_lookup[torch], light_lookup[sky] * sky_level);
+			v = fminf(fmaxf(v, ambient), 1.0F);
+			uint8_t gray = roundf(v * 255.0F);
 			colors[(torch * 16 + sky) * 3 + 0] = gray;
 			colors[(torch * 16 + sky) * 3 + 1] = gray;
 			colors[(torch * 16 + sky) * 3 + 2] = gray;

@@ -181,10 +181,16 @@ void gfx_update_light(float daytime, const float* light_lookup) {
 	assert(daytime > -GLM_FLT_EPSILON && daytime < 1.0F + GLM_FLT_EPSILON
 		   && light_lookup);
 
+	/* Moonlight floor: at midnight daytime -> 0, which would zero out every
+	   skylit surface. Clamp sky contribution to never drop below 20% so the
+	   world stays visible at night. Also add a small absolute ambient so
+	   fully-occluded, torch-less spots aren't pitch black. */
+	float sky_level = fmaxf(daytime, 0.2F);
+	const float ambient = 0.04F;
 	for(int sky = 0; sky < 16; sky++) {
 		for(int torch = 0; torch < 16; torch++) {
-			colors[torch * 16 + sky]
-				= fmaxf(light_lookup[torch], light_lookup[sky] * daytime);
+			float v = fmaxf(light_lookup[torch], light_lookup[sky] * sky_level);
+			colors[torch * 16 + sky] = fminf(fmaxf(v, ambient), 1.0F);
 		}
 	}
 
