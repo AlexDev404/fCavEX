@@ -79,22 +79,20 @@ jobs:
         run: cmake --build build --parallel
 
       - name: Stage Windows package
-        shell: bash
         run: |
           mkdir -p dist/fCavEX
           cp build/cavex.exe dist/fCavEX/
-          # Bundle the MinGW runtime DLLs the exe depends on
-          MINGW_BIN="/c/msys64/ucrt64/bin"
-          for dll in \
-              libgcc_s_seh-1.dll libwinpthread-1.dll \
-              glfw3.dll glew32.dll zlib1.dll libstdc++-6.dll; do
-            if [ -f "$MINGW_BIN/$dll" ]; then
-              cp "$MINGW_BIN/$dll" dist/fCavEX/
-            fi
-          done
+          # Copy every non-system DLL the exe transitively depends on.
+          # ldd resolves against the active MSYSTEM's bin dir (here /ucrt64/bin).
+          ldd build/cavex.exe \
+            | awk '/=>/ {print $3}' \
+            | grep -Ei '/(ucrt64|mingw64)/' \
+            | sort -u \
+            | while read -r dll; do cp "$dll" dist/fCavEX/; done
           cp config_pc.json       dist/fCavEX/config.json
           cp -r assets            dist/fCavEX/assets
           cp README.md LICENSE    dist/fCavEX/ || true
+          ls -la dist/fCavEX/
 
       - name: Upload Windows build artifact
         uses: actions/upload-artifact@v4
