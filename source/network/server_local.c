@@ -218,9 +218,36 @@ void server_local_set_player_health(struct server_local* s, short new_health) {
 
 		//respawn with half health
 		s->player.health = MAX_PLAYER_HEALTH/2;
-		s->player.x = s->player.spawn_x;
-		s->player.y = s->player.spawn_y;
-		s->player.z = s->player.spawn_z;
+
+		/* The spawn point stored in level.dat is a block coordinate, not a
+		   player position. Player Y is the eye height, feet sit 1.62 below.
+		   Scan the column at (spawn_x, spawn_z) top-down for the first solid
+		   block and place the player on top of it so we don't respawn buried
+		   inside terrain or a tree. */
+		float spawn_cx = (float)s->player.spawn_x + 0.5F;
+		float spawn_cz = (float)s->player.spawn_z + 0.5F;
+		int feet_y = s->player.spawn_y + 1;
+		for(int y = WORLD_HEIGHT - 2; y >= 0; y--) {
+			struct block_data b_here, b_above;
+			if(!server_world_get_block(&s->world, s->player.spawn_x, y,
+									   s->player.spawn_z, &b_here))
+				continue;
+			if(b_here.type == BLOCK_AIR)
+				continue;
+			if(!server_world_get_block(&s->world, s->player.spawn_x, y + 1,
+									   s->player.spawn_z, &b_above)
+			   || b_above.type != BLOCK_AIR)
+				continue;
+			feet_y = y + 1;
+			break;
+		}
+
+		s->player.x = spawn_cx;
+		s->player.y = (float)feet_y + 1.62F;
+		s->player.z = spawn_cz;
+		s->player.vel_y = 0;
+		s->player.old_vel_y = 0;
+		s->player.fall_y = s->player.y;
 		clin_rpc_send(&(struct client_rpc) {
 			.type = CRPC_PLAYER_POS,
 			.payload.player_pos.position = {s->player.x, s->player.y, s->player.z},
