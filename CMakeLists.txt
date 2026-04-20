@@ -45,6 +45,8 @@ add_executable(cavex
 				source/block/block_lava.c
 				source/block/block_leaves.c
 				source/block/block_log.c
+				source/block/block_minecart.c
+				source/block/block_redstone_wire.c
 				source/block/block_netherrack.c
 				source/block/block_noteblock.c
 				source/block/block_obsidian.c
@@ -82,6 +84,7 @@ add_executable(cavex
 				source/entity/entity_local_player.c
 				source/entity/entity_item.c
 				source/entity/entity_monster.c
+				source/entity/entity_minecart.c
 
 				source/cNBT/buffer.c
 				source/cNBT/nbt_loading.c
@@ -122,6 +125,12 @@ add_executable(cavex
 				source/item/items/item_egg_zombie.c
 				source/item/items/item_flint_steel.c
 				source/item/items/item_seeds.c
+				source/item/items/item_bed.c
+				source/item/items/item_bucket.c
+				source/item/items/item_bucket_lava.c
+				source/item/items/item_bucket_water.c
+				source/item/items/item_minecart.c
+				source/item/items/item_redstone.c
 
 				source/network/client_interface.c
 				source/network/complex_block_archive.c
@@ -143,7 +152,7 @@ add_executable(cavex
 				source/graphics/render_block.c
 				source/graphics/render_item.c
 				source/graphics/render_model.c
-				source/graphics/render_monster.c
+				source/graphics/render_entity.c
 				source/graphics/texture_atlas.c
 
 				source/platform/displaylist.c
