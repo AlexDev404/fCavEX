@@ -32,6 +32,7 @@
 #include <dirent.h>
 #include <m-lib/m-string.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <time.h>
 
 static struct stack* worlds = NULL;
@@ -84,9 +85,20 @@ static void screen_sworld_reset(struct screen* s, int width, int height) {
 	if(d) {
 		struct dirent* dir;
 		while((dir = readdir(d))) {
-			if(dir->d_type & DT_DIR && *dir->d_name != '.') {
-				struct world_option opt;
-				string_init_printf(opt.path, "%s/%s", saves_path, dir->d_name);
+			if(*dir->d_name == '.')
+				continue;
+
+			struct world_option opt;
+			string_init_printf(opt.path, "%s/%s", saves_path, dir->d_name);
+
+			struct stat st;
+			if(stat(string_get_cstr(opt.path), &st) != 0
+			   || !S_ISDIR(st.st_mode)) {
+				string_clear(opt.path);
+				continue;
+			}
+
+			{
 
 				struct level_archive la;
 				if(level_archive_create(&la, opt.path)) {
