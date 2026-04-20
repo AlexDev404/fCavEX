@@ -291,3 +291,9 @@ void sound_play_step(uint8_t block_type, float x, float y, float z) {
 	snprintf(buf, sizeof(buf), "step.%s", dig + 4);
 	sound_play_ex(buf, x, y, z, 0.15f, 1.0f);
 }
+
+void sound_play_block_dig(uint8_t block_type, float x, float y, float z) {
+	const char* ev = dig_event_for_block(block_type);
+	if(ev)
+		sound_play_ex(ev, x, y, z, 0.25f, 0.5f);
+}

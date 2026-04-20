@@ -27,6 +27,7 @@
 #include "../../network/server_interface.h"
 #include "../../network/server_local.h"
 #include "../../particle.h"
+#include "../../sound/sound.h"
 #include "../../platform/gfx.h"
 #include "../../platform/input.h"
 #include "../game_state.h"
@@ -345,6 +346,11 @@ static void screen_ingame_update(struct screen* s, float dt) {
 									  .y = gstate.camera_hit.y,
 									  .z = gstate.camera_hit.z},
 				gstate.camera_hit.side);
+
+			if(gstate.digging.active)
+				sound_play_block_dig(blk.type, gstate.camera_hit.x,
+				                     gstate.camera_hit.y,
+				                     gstate.camera_hit.z);
 		}
 	}
 

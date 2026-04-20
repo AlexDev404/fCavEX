@@ -87,6 +87,8 @@ struct entity {
 			int jump_ticks;
 			bool capture_input;
 			float step_distance;
+			float swim_distance;
+			bool was_in_liquid;
 		} local_player;
 		struct entity_item {
 			struct item_data item;

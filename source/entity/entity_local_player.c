@@ -247,6 +247,28 @@ static bool entity_tick(struct entity* e) {
 		e->data.local_player.step_distance = 0.0F;
 	}
 
+	// Liquid splash on water/lava entry, and swim loop while submerged.
+	bool in_liquid = in_water || in_lava;
+	if(in_liquid && !e->data.local_player.was_in_liquid) {
+		sound_play_ex("liquid.splash", e->pos[0], e->pos[1], e->pos[2],
+		              0.4F, 1.0F);
+	}
+	if(in_liquid) {
+		float dx = e->pos[0] - e->pos_old[0];
+		float dy = e->pos[1] - e->pos_old[1];
+		float dz = e->pos[2] - e->pos_old[2];
+		e->data.local_player.swim_distance
+			+= sqrtf(dx * dx + dy * dy + dz * dz);
+		if(e->data.local_player.swim_distance > 0.6F) {
+			e->data.local_player.swim_distance = 0.0F;
+			sound_play_ex("liquid.swim", e->pos[0], e->pos[1], e->pos[2],
+			              0.2F, 1.0F);
+		}
+	} else {
+		e->data.local_player.swim_distance = 0.0F;
+	}
+	e->data.local_player.was_in_liquid = in_liquid;
+
 	// update client-side oxygen bar
 	if(gstate.in_water) gstate.oxygen--;
 	else gstate.oxygen = MAX_OXYGEN;
@@ -281,4 +303,6 @@ void entity_local_player(uint32_t id, struct entity* e, struct world* w) {
 	entity_default_init(e, false, w);
 	e->data.local_player.jump_ticks = 0;
 	e->data.local_player.step_distance = 0.0F;
+	e->data.local_player.swim_distance = 0.0F;
+	e->data.local_player.was_in_liquid = false;
 }
