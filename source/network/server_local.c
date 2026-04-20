@@ -699,7 +699,10 @@ static void server_local_update(struct server_local* s) {
 	if(s->player.old_vel_y < -0.079f && s->player.vel_y >= -0.079f) {
 		int fall_distance = s->player.fall_y - s->player.y;
 		if(fall_distance >= 4) {
-			server_local_set_player_health(s, s->player.health-HEALTH_PER_HEART*(fall_distance-3));
+			/* Minecraft Beta fall damage: one half-heart per block above 3.
+			   Previous code dealt a full heart per block, so a 13-block fall
+			   was instakill instead of the correct 23-block threshold. */
+			server_local_set_player_health(s, s->player.health - (HEALTH_PER_HEART / 2) * (fall_distance - 3));
 		}
 		s->player.fall_y = s->player.y;
 	}
