@@ -42,6 +42,7 @@ void sound_play_ex(const char* event, float x, float y, float z,
 /* Convenience: emit the appropriate dig.<material> sound for a block-type id. */
 void sound_play_block_break(uint8_t block_type, float x, float y, float z);
 void sound_play_block_place(uint8_t block_type, float x, float y, float z);
+void sound_play_step(uint8_t block_type, float x, float y, float z);
 
 /* Update listener position + forward vector. Call once per frame. */
 void sound_set_listener(float x, float y, float z,

@@ -21,6 +21,7 @@
 #include "../platform/input.h"
 #include "../game/game_state.h"
 #include "../network/server_local.h"
+#include "../sound/sound.h"
 #include "entity.h"
 
 #define EYE_HEIGHT 1.62F
@@ -228,6 +229,24 @@ static bool entity_tick(struct entity* e) {
 			e->vel[1] = 0.3F;
 	}
 
+	// footstep sounds: accumulate horizontal distance while on_ground,
+	// trigger every ~1.5 blocks and sample the block just below the player.
+	if(e->on_ground && !in_water && !in_lava) {
+		float dx = e->pos[0] - e->pos_old[0];
+		float dz = e->pos[2] - e->pos_old[2];
+		e->data.local_player.step_distance += sqrtf(dx * dx + dz * dz);
+		if(e->data.local_player.step_distance > 1.5F) {
+			e->data.local_player.step_distance = 0.0F;
+			struct block_data blk;
+			if(entity_get_block(e, floorf(e->pos[0]),
+			                    floorf(e->pos[1] - EYE_HEIGHT - 0.1F),
+			                    floorf(e->pos[2]), &blk))
+				sound_play_step(blk.type, e->pos[0], e->pos[1], e->pos[2]);
+		}
+	} else {
+		e->data.local_player.step_distance = 0.0F;
+	}
+
 	// update client-side oxygen bar
 	if(gstate.in_water) gstate.oxygen--;
 	else gstate.oxygen = MAX_OXYGEN;
@@ -261,4 +280,5 @@ void entity_local_player(uint32_t id, struct entity* e, struct world* w) {
 
 	entity_default_init(e, false, w);
 	e->data.local_player.jump_ticks = 0;
+	e->data.local_player.step_distance = 0.0F;
 }

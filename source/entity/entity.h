@@ -86,6 +86,7 @@ struct entity {
 		struct entity_local_player {
 			int jump_ticks;
 			bool capture_input;
+			float step_distance;
 		} local_player;
 		struct entity_item {
 			struct item_data item;

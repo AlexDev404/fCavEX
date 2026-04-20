@@ -282,3 +282,12 @@ void sound_play_block_place(uint8_t block_type, float x, float y, float z) {
 	if(ev)
 		sound_play(ev, x, y, z);
 }
+
+void sound_play_step(uint8_t block_type, float x, float y, float z) {
+	const char* dig = dig_event_for_block(block_type);
+	if(!dig || strncmp(dig, "dig.", 4) != 0)
+		return;
+	char buf[32];
+	snprintf(buf, sizeof(buf), "step.%s", dig + 4);
+	sound_play_ex(buf, x, y, z, 0.15f, 1.0f);
+}
