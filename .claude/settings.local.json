@@ -3,7 +3,8 @@
     "allow": [
       "Bash(unzip *)",
       "Bash(git -C /c/Users/Immanuel/source/repos/fCavEX ls-files source/cNBT source/lodepng source/parson source/cglm)",
-      "Bash(git *)"
+      "Bash(git *)",
+      "Bash(python3 *)"
     ]
   }
 }

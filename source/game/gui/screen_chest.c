@@ -226,9 +226,9 @@ static void screen_chest_render2D(struct screen* s, int width, int height) {
 			gutil_draw_item(&item, off_x + slots[k].x, off_y + slots[k].y, 1);
 	}
 
-	gfx_bind_texture(&texture_gui2);
+	gfx_bind_texture(&texture_gui);
 
-	gutil_texquad(off_x + selection->x - 4 * GFX_GUI_SCALE, off_y + selection->y - 4 * GFX_GUI_SCALE, 208, 0,
+	gutil_texquad(off_x + selection->x - 4 * GFX_GUI_SCALE, off_y + selection->y - 4 * GFX_GUI_SCALE, 0, 22,
 				  24, 24, 24 * GFX_GUI_SCALE, 24 * GFX_GUI_SCALE);
 
 	int icon_offset = 16 * GFX_GUI_SCALE;

@@ -42,7 +42,8 @@ struct tex_gfx texture_gui_crafting;
 struct tex_gfx texture_gui_furnace;
 struct tex_gfx texture_gui_chest;
 struct tex_gfx texture_gui_iron_chest;
-struct tex_gfx texture_gui2;
+struct tex_gfx texture_gui;
+struct tex_gfx texture_icons;
 struct tex_gfx texture_controls;
 struct tex_gfx texture_pointer;
 struct tex_gfx texture_clouds;
@@ -115,8 +116,9 @@ void tex_init() {
 					  false);
 	tex_gfx_load_file(&texture_gui_iron_chest, "gui/iron_chest.png", TEX_FMT_RGBA16,
 					  false);
-	tex_gfx_load_file(&texture_gui2, "gui_2.png", TEX_FMT_RGBA16, false);
-	tex_gfx_load_file(&texture_items, "items.png", TEX_FMT_RGBA16, false);
+	tex_gfx_load_file(&texture_gui, "gui/gui.png", TEX_FMT_RGBA16, false);
+	tex_gfx_load_file(&texture_icons, "gui/icons.png", TEX_FMT_RGBA16, false);
+	tex_gfx_load_file(&texture_items, "gui/items.png", TEX_FMT_RGBA16, false);
 	tex_gfx_load_file(&texture_mobs, "mobs.png", TEX_FMT_RGBA16, false);
 	tex_gfx_load_file(&texture_minecart, "entity/minecart.png", TEX_FMT_RGBA16, false);
 	tex_gfx_load_file(&texture_creeper, "entity/creeper.png", TEX_FMT_RGBA16, false);

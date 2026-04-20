@@ -526,13 +526,15 @@ sprintf(str, "time: %.0f (%.0f)  angle: %.3f", time, day_ticks, angle);
 
 	icon_offset += gutil_control_icon(icon_offset, IB_HOME, "Pause");
 
-	// draw hotbar
-	gfx_bind_texture(&texture_gui2);
+	// draw hotbar (Minecraft-standard: gui/gui.png (0,0) 182x22)
+	gfx_bind_texture(&texture_gui);
 	gutil_texquad((width - 182 * GFX_GUI_SCALE) / 2, height - (GFX_GUI_SCALE * 16) * 8 / 5 - 22 * GFX_GUI_SCALE, 0, 0,
 				  182, 22, 182 * GFX_GUI_SCALE, 22 * GFX_GUI_SCALE);
 
+	// crosshair (gui/icons.png (0,0) 16x16, inverted blend)
+	gfx_bind_texture(&texture_icons);
 	gfx_blending(MODE_INVERT);
-	gutil_texquad((width - 16 * GFX_GUI_SCALE) / 2, (height - 16 * GFX_GUI_SCALE) / 2, 0, 229, GFX_GUI_SCALE, GFX_GUI_SCALE,
+	gutil_texquad((width - 16 * GFX_GUI_SCALE) / 2, (height - 16 * GFX_GUI_SCALE) / 2, 0, 0, 16, 16,
 				  16 * GFX_GUI_SCALE, 16 * GFX_GUI_SCALE);
 
 	gfx_blending(MODE_OFF);
@@ -547,32 +549,33 @@ sprintf(str, "time: %.0f (%.0f)  angle: %.3f", time, day_ticks, angle);
 	}
 
 	gfx_blending(MODE_BLEND);
-	gfx_bind_texture(&texture_gui2);
+	gfx_bind_texture(&texture_gui);
 
-	// draw hotbar selection
+	// draw hotbar selection (gui/gui.png (0,22) 24x24)
 	gutil_texquad((width - 182 * GFX_GUI_SCALE) / 2 - 2
-					  + 20 * GFX_GUI_SCALE 
+					  + 20 * GFX_GUI_SCALE
 						  * inventory_get_hotbar(windowc_get_latest(
 							  gstate.windows[WINDOWC_INVENTORY])),
-				  height - (GFX_GUI_SCALE * 16) * 8 / 5 - 23 * GFX_GUI_SCALE, 208, 0, 24, 24, 24 * GFX_GUI_SCALE, 24 * GFX_GUI_SCALE);
+				  height - (GFX_GUI_SCALE * 16) * 8 / 5 - 23 * GFX_GUI_SCALE, 0, 22, 24, 24, 24 * GFX_GUI_SCALE, 24 * GFX_GUI_SCALE);
+
+	gfx_bind_texture(&texture_icons);
 
 	int heart_y = height - (GFX_GUI_SCALE * 16) * 8 / 5 - (22 + 10) * GFX_GUI_SCALE;
 	int heart_count = MAX_PLAYER_HEALTH / HEALTH_PER_HEART;
 	int hp = gstate.local_player->health;
 	for(int k = 0; k < heart_count; k++) {
 		int x = (width - 182 * GFX_GUI_SCALE) / 2 + k * 8 * GFX_GUI_SCALE;
-		// background (empty) heart
-		gutil_texquad(x, heart_y, 16, 229, 9, 9,
+		// background (empty) heart (gui/icons.png (16,0))
+		gutil_texquad(x, heart_y, 16, 0, 9, 9,
 					  9 * GFX_GUI_SCALE, 9 * GFX_GUI_SCALE);
-		/* Each heart covers HEALTH_PER_HEART health; a half-heart is the
-		   lower HEALTH_PER_HEART/2 of that range. Full/half/empty chosen
-		   from the vanilla icons sheet (full at u=52, half at u=61). */
+		/* Full at u=52, half at u=61 on gui/icons.png. Each heart covers
+		   HEALTH_PER_HEART health; a half-heart fills the lower half. */
 		int heart_hp = hp - k * HEALTH_PER_HEART;
 		if(heart_hp >= HEALTH_PER_HEART) {
-			gutil_texquad(x, heart_y, 52, 229, 9, 9,
+			gutil_texquad(x, heart_y, 52, 0, 9, 9,
 						  9 * GFX_GUI_SCALE, 9 * GFX_GUI_SCALE);
 		} else if(heart_hp >= HEALTH_PER_HEART / 2) {
-			gutil_texquad(x, heart_y, 61, 229, 9, 9,
+			gutil_texquad(x, heart_y, 61, 0, 9, 9,
 						  9 * GFX_GUI_SCALE, 9 * GFX_GUI_SCALE);
 		}
 	}
@@ -580,8 +583,9 @@ sprintf(str, "time: %.0f (%.0f)  angle: %.3f", time, day_ticks, angle);
 	// draw oxygen bar if underwater
 	if(gstate.in_water && gstate.oxygen >= OXYGEN_THRESHOLD) {
 		for(int k = 0; k < ((gstate.oxygen - OXYGEN_THRESHOLD) / 32); k++) {
+			// bubble (gui/icons.png (16,18) 9x9)
 			gutil_texquad((width - 182 * GFX_GUI_SCALE) / 2 + k * 8 * GFX_GUI_SCALE,
-							height - (GFX_GUI_SCALE * 20) * 8 / 5 - (22 + 10) * GFX_GUI_SCALE, 17, 249, 9, 9, 9 * GFX_GUI_SCALE,
+							height - (GFX_GUI_SCALE * 20) * 8 / 5 - (22 + 10) * GFX_GUI_SCALE, 16, 18, 9, 9, 9 * GFX_GUI_SCALE,
 						9 * GFX_GUI_SCALE);
 
 		}
