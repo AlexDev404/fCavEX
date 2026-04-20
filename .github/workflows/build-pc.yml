@@ -50,6 +50,9 @@ jobs:
           rm -f source/cNBT/main_test.c source/cNBT/afl_check.c \
                 source/cNBT/check.c      source/cNBT/tests.c
 
+          # parson ships a tests.c with its own main() — drop it
+          rm -f source/parson/tests.c
+
           # Upstream lodepng is distributed as C++ (lodepng.cpp); compile as C
           mv source/lodepng/lodepng.cpp source/lodepng/lodepng.c
           find source/lodepng -mindepth 1 -maxdepth 1 \

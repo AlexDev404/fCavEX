@@ -177,7 +177,7 @@ add_executable(cavex
 
 				source/parson/parson.c
 
-				source/sound/sound.c
+				source/sound/sound_system.c
 				source/platform/sound.c
 			)
 
