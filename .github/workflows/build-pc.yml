@@ -91,6 +91,8 @@ jobs:
             | while read -r dll; do cp "$dll" dist/fCavEX/; done
           cp config_pc.json       dist/fCavEX/config.json
           cp -r assets            dist/fCavEX/assets
+          # Shaders ship in resources/ but are loaded from <texturepack>/*.shader
+          if [ -d resources ]; then cp resources/*.shader dist/fCavEX/assets/; fi
           cp README.md LICENSE    dist/fCavEX/ || true
           ls -la dist/fCavEX/
 
