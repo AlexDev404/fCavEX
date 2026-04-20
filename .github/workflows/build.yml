@@ -90,3 +90,10 @@ jobs:
           name: fCavEX-elf
           path: fCavEX.elf
           if-no-files-found: error
+
+      - name: Upload linker map
+        uses: actions/upload-artifact@v4
+        with:
+          name: fCavEX-map
+          path: fCavEX.elf.map
+          if-no-files-found: warn
