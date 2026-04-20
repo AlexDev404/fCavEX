@@ -9,24 +9,32 @@ on:
 
 jobs:
   build:
-    name: Build fCavEX for Windows (x64, MSVC)
+    name: Build fCavEX for Windows (x64, MinGW-w64)
     runs-on: windows-latest
 
     defaults:
       run:
-        shell: bash
-
-    env:
-      VCPKG_DEFAULT_TRIPLET: x64-windows-release
+        shell: msys2 {0}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install C/C++ libraries via vcpkg
-        run: |
-          vcpkg install glfw3 glew zlib --triplet x64-windows-release
-          echo "VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT" >> "$GITHUB_ENV"
+      - name: Set up MSYS2 (MinGW-w64 UCRT64)
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: >-
+            git
+            base-devel
+            mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-cmake
+            mingw-w64-ucrt-x86_64-ninja
+            mingw-w64-ucrt-x86_64-pkgconf
+            mingw-w64-ucrt-x86_64-glfw
+            mingw-w64-ucrt-x86_64-glew
+            mingw-w64-ucrt-x86_64-zlib
 
       - name: Fetch third-party dependencies
         run: |
@@ -61,22 +69,29 @@ jobs:
           mkdir -p source/stb
           cp /tmp/stb/stb_vorbis.c source/stb/
 
-      - name: Configure (CMake + vcpkg toolchain)
+      - name: Configure (CMake + Ninja, MinGW-w64 gcc)
         run: |
-          cmake -S . -B build \
-            -G "Visual Studio 17 2022" -A x64 \
-            -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" \
-            -DVCPKG_TARGET_TRIPLET=x64-windows-release
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_COMPILER=gcc
 
       - name: Build (Release)
-        run: cmake --build build --config Release --parallel
+        run: cmake --build build --parallel
 
       - name: Stage Windows package
+        shell: bash
         run: |
           mkdir -p dist/fCavEX
-          cp build/Release/cavex.exe dist/fCavEX/
-          # bundle the DLLs vcpkg emitted alongside the exe
-          cp build/Release/*.dll dist/fCavEX/ 2>/dev/null || true
+          cp build/cavex.exe dist/fCavEX/
+          # Bundle the MinGW runtime DLLs the exe depends on
+          MINGW_BIN="/c/msys64/ucrt64/bin"
+          for dll in \
+              libgcc_s_seh-1.dll libwinpthread-1.dll \
+              glfw3.dll glew32.dll zlib1.dll libstdc++-6.dll; do
+            if [ -f "$MINGW_BIN/$dll" ]; then
+              cp "$MINGW_BIN/$dll" dist/fCavEX/
+            fi
+          done
           cp config_pc.json       dist/fCavEX/config.json
           cp -r assets            dist/fCavEX/assets
           cp README.md LICENSE    dist/fCavEX/ || true
