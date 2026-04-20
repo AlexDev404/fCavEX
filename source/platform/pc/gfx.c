@@ -25,6 +25,7 @@
 #include <math.h>
 #include <string.h>
 
+#include "../../cglm/cglm.h"
 #include "../../game/game_state.h"
 #include "../../graphics/texture_atlas.h"
 #include "../../graphics/gfx_settings.h"
@@ -199,6 +200,38 @@ void gfx_update_light(float daytime, const float* light_lookup) {
 
 float gfx_lookup_light(uint8_t light) {
 	return colors[light];
+}
+
+void gfx_update_sun(float celestial_angle, float brightness) {
+	/* Place the sun on an east-up-west arc. celestial_angle=0 at sunrise,
+	   0.25 at noon (high), 0.5 at sunset, 0.75 at midnight (moon peak).
+	   Keep a small Z tilt so surfaces that face due north aren't always
+	   completely dark. When the sun is below the horizon we flip to the
+	   moon direction so there's still a shading cue at night. */
+	float theta = celestial_angle * 2.0F * GLM_PI;
+	float sx = cosf(theta);
+	float sy = sinf(theta);
+
+	/* Moon opposes the sun; pick whichever is above the horizon and scale
+	   strength accordingly (moon much weaker). */
+	float sun_y = sy;
+	float sun_x = sx;
+	float strength;
+	if(sun_y > 0.0F) {
+		strength = brightness;
+	} else {
+		sun_x = -sx;
+		sun_y = -sy;
+		strength = 0.15F;
+	}
+
+	float len = sqrtf(sun_x * sun_x + sun_y * sun_y + 0.2F * 0.2F);
+	float dx = sun_x / len;
+	float dy = sun_y / len;
+	float dz = 0.2F / len;
+
+	glUniform3f(glGetUniformLocation(shader_prog, "sun_dir"), dx, dy, dz);
+	glUniform1f(glGetUniformLocation(shader_prog, "sun_strength"), strength);
 }
 
 void gfx_clear_buffers(uint8_t r, uint8_t g, uint8_t b) {

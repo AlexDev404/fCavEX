@@ -249,6 +249,8 @@ int main(void) {
 			if(render_world) {
 				gfx_update_light(daytime_brightness(daytime),
 								 world_dimension_light(&gstate.world));
+				gfx_update_sun(daytime_celestial_angle(daytime),
+							   daytime_brightness(daytime));
 
 				if(gstate.world.dimension == WORLD_DIM_OVERWORLD)
 					gutil_sky_box(gstate.camera.view,

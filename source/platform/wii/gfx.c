@@ -223,6 +223,16 @@ float gfx_lookup_light(uint8_t light) {
 	return (float)colors[light * 3] / 255.0F;
 }
 
+void gfx_update_sun(float celestial_angle, float brightness) {
+	/* Blinn-Phong directional lighting is a PC-only feature — it depends on
+	   per-fragment screen-space derivatives, which don't exist on GX's
+	   fixed-function pipeline. The Wii already has per-face shading baked
+	   into the mesher via shade_sides (see render_block.c), so there's
+	   nothing to do here. */
+	(void)celestial_angle;
+	(void)brightness;
+}
+
 void gfx_clear_buffers(uint8_t r, uint8_t g, uint8_t b) {
 	GX_SetCopyClear((GXColor) {r, g, b, 255}, GX_MAX_Z24);
 }

@@ -47,6 +47,10 @@ enum cull_func {
 
 void gfx_setup(void);
 void gfx_update_light(float daytime, const float* light_lookup);
+/* Update the directional-light uniforms used by Blinn-Phong shading.
+   `celestial_angle` is the normalized (0..1) sun angle from daytime_celestial_angle.
+   `brightness` is the 0..1 sky brightness factor (day -> 1, night -> small). */
+void gfx_update_sun(float celestial_angle, float brightness);
 float gfx_lookup_light(uint8_t light);
 void gfx_finish(bool vsync);
 void gfx_flip_buffers(float* gpu_wait, float* vsync_wait);
