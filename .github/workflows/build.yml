@@ -83,3 +83,10 @@ jobs:
           name: fCavEX-homebrew
           path: dist/fCavEX.zip
           if-no-files-found: error
+
+      - name: Upload ELF (for symbol resolution / debugging)
+        uses: actions/upload-artifact@v4
+        with:
+          name: fCavEX-elf
+          path: fCavEX.elf
+          if-no-files-found: error
