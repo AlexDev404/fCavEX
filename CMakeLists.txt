@@ -174,6 +174,12 @@ add_executable(cavex
 
 target_compile_definitions(cavex PRIVATE PLATFORM_PC CGLM_ALL_UNALIGNED)
 
+# Vendored header-only libs that aren't installed system-wide (e.g. M*LIB on Windows)
+# get staged into deps/include/ by CI.
+if(EXISTS "${CMAKE_SOURCE_DIR}/deps/include")
+	target_include_directories(cavex PRIVATE "${CMAKE_SOURCE_DIR}/deps/include")
+endif()
+
 set_target_properties(
 	cavex PROPERTIES
 	C_STANDARD 99
