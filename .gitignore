@@ -18,6 +18,7 @@ Makefile
 .settings/org.eclipse.cdt.core.prefs
 assets/default.png
 *.png
+!assets/**/*.png
 *.dol
 *.elf
 *.zip

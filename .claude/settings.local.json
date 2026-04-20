@@ -4,7 +4,8 @@
       "Bash(unzip *)",
       "Bash(git -C /c/Users/Immanuel/source/repos/fCavEX ls-files source/cNBT source/lodepng source/parson source/cglm)",
       "Bash(git *)",
-      "Bash(python3 *)"
+      "Bash(python3 *)",
+      "Bash(python -c \"from PIL import Image; import sys; [print\\(p, Image.open\\(p\\).size\\) for p in [r'C:/Users/Immanuel/source/repos/fCavEX/assets/gui/gui.png', r'C:/Users/Immanuel/source/repos/fCavEX/assets/gui/icons.png']]\")"
     ]
   }
 }
