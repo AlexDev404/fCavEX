@@ -154,13 +154,23 @@ static bool entity_tick(struct entity* e) {
 	aabb_setsize_centered(&bbox, 0.6F, 1.8F, 0.6F);
 	aabb_translate(&bbox, 0.0F, 1.8F / 2.0F - EYE_HEIGHT, 0.0F);
 
-	// Unstuck (cheap vertical nudge)
-	struct AABB tmp1 = bbox, tmp2 = bbox;
-	float unstuck_move = 0.01F;
-	aabb_translate(&tmp1, e->pos[0], e->pos[1], e->pos[2]);
-	aabb_translate(&tmp2, e->pos[0], e->pos[1] + unstuck_move, e->pos[2]);
-	if(entity_aabb_intersection(e, &tmp1) && !entity_aabb_intersection(e, &tmp2)) {
-		e->pos[1] += unstuck_move;
+	// Unstuck: if embedded in a block (e.g. placed under our feet mid-jump),
+	// escalate upward until we clear, so the player isn't locked in place.
+	{
+		struct AABB here = bbox;
+		aabb_translate(&here, e->pos[0], e->pos[1], e->pos[2]);
+		if(entity_aabb_intersection(e, &here)) {
+			for(float d = 0.05F; d <= 1.5F; d += 0.05F) {
+				struct AABB try_box = bbox;
+				aabb_translate(&try_box, e->pos[0], e->pos[1] + d, e->pos[2]);
+				if(!entity_aabb_intersection(e, &try_box)) {
+					e->pos[1] += d;
+					if(e->vel[1] < 0.0F)
+						e->vel[1] = 0.0F;
+					break;
+				}
+			}
+		}
 	}
 
 	vec3 new_pos, new_vel;
