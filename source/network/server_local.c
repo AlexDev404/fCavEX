@@ -219,6 +219,12 @@ void server_local_set_player_health(struct server_local* s, short new_health) {
 		//respawn with half health
 		s->player.health = MAX_PLAYER_HEALTH/2;
 
+		/* If the player died with a window open (chest/furnace/crafting),
+		   active_inventory still points at that (possibly freed) inventory.
+		   Reset to the player's own inventory so subsequent pickups and
+		   actions use the right target. */
+		s->player.active_inventory = &s->player.inventory;
+
 		/* The spawn point stored in level.dat is a block coordinate, not a
 		   player position. Player Y is the eye height, feet sit 1.62 below.
 		   Scan the column at (spawn_x, spawn_z) top-down for the first solid

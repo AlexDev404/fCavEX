@@ -156,19 +156,25 @@ static bool entity_server_tick(struct entity* e, struct server_local* s) {
 					 e->pos,
 					 (vec3) {s->player.x, s->player.y - 0.6F, s->player.z})
 				  < glm_pow2(2.0F)) { // allow pickup after 2s
-		// TODO: case where item cannot be picked up completely
-		if(s->player.active_inventory && s->player.active_inventory->logic
-		   && s->player.active_inventory->logic->on_collect)
-			s->player.active_inventory->logic->on_collect(
-				s->player.active_inventory, &e->data.item.item);
+		/* Route pickup to the player's inventory, not the active window.
+		   If the player dies with a chest/furnace/crafting UI open,
+		   active_inventory points at that window's inventory — and on death
+		   the window isn't closed, so pickup would silently land in the
+		   wrong (or freed) inventory. Items are always a player resource. */
+		struct inventory* target = &s->player.inventory;
+		bool collected = false;
+		if(target->logic && target->logic->on_collect)
+			collected = target->logic->on_collect(target, &e->data.item.item);
 
-		clin_rpc_send(&(struct client_rpc) {
-			.type = CRPC_PICKUP_ITEM,
-			.payload.pickup_item.entity_id = e->id,
-			.payload.pickup_item.collector_id = 0, // local player
-		});
+		if(collected) {
+			clin_rpc_send(&(struct client_rpc) {
+				.type = CRPC_PICKUP_ITEM,
+				.payload.pickup_item.entity_id = e->id,
+				.payload.pickup_item.collector_id = 0, // local player
+			});
 
-		e->delay_destroy = 1;
+			e->delay_destroy = 1;
+		}
 	}
 
 	return e->data.item.age >= 5 * 60 * 20; // destroy after 5 min
