@@ -407,7 +407,7 @@ raycast_entity(dict_entity_t *entities,
     while (!dict_entity_end_p(it)) {
         struct entity *e = dict_entity_ref(it)->value;
 
-        if (e->id == 0) {
+        if (e->id == 0 || e->getBoundingBox == NULL) {
             dict_entity_next(it);
             continue;
         }
