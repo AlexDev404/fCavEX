@@ -264,11 +264,13 @@ static bool entity_tick(struct entity* e) {
 		              0.4F, 1.0F);
 	}
 	if(in_liquid) {
+		/* Count only horizontal motion. Standing still in water still
+		   produces tiny vertical oscillation from buoyancy/gravity every
+		   tick, which accumulates past the 0.6 threshold and causes the
+		   swim sound to loop indefinitely. */
 		float dx = e->pos[0] - e->pos_old[0];
-		float dy = e->pos[1] - e->pos_old[1];
 		float dz = e->pos[2] - e->pos_old[2];
-		e->data.local_player.swim_distance
-			+= sqrtf(dx * dx + dy * dy + dz * dz);
+		e->data.local_player.swim_distance += sqrtf(dx * dx + dz * dz);
 		if(e->data.local_player.swim_distance > 0.6F) {
 			e->data.local_player.swim_distance = 0.0F;
 			sound_play_ex("liquid.swim", e->pos[0], e->pos[1], e->pos[2],
