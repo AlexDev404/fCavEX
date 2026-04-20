@@ -20,7 +20,6 @@
 #include <assert.h>
 
 #include "thread.h"
-#include <ogc/video.h>
 #include <stddef.h>
 #ifdef PLATFORM_PC
 
@@ -112,6 +111,8 @@ bool tchannel_send(struct thread_channel* c, void* msg, bool block) {
 #endif
 
 #ifdef PLATFORM_WII
+
+#include <ogc/video.h>
 
 void thread_create(struct thread* t, void* (*entry)(void* arg), void* arg,
 				   uint8_t priority) {

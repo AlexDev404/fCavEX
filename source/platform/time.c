@@ -23,6 +23,10 @@
 
 #include <time.h>
 
+#ifndef CLOCK_MONOTONIC_RAW
+#define CLOCK_MONOTONIC_RAW CLOCK_MONOTONIC
+#endif
+
 void time_reset() { }
 
 ptime_t time_get() {
