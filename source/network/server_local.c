@@ -290,6 +290,28 @@ static void server_local_process(struct server_rpc* call, void* user) {
 				s->player.ry = call->payload.player_pos.ry;
 				s->player.old_vel_y = s->player.vel_y;
 				s->player.vel_y = call->payload.player_pos.vel_y;
+
+				/* Detect fall start/land here, not in the tick. Multiple
+				   PLAYER_POS messages can arrive between ticks; if both the
+				   falling update and the landed update are processed in the
+				   same batch, a tick-time check only sees the final pair
+				   (rest → rest) and misses the landing transition entirely.
+				   Evaluating per-message catches every edge. */
+				if(s->player.old_vel_y >= -0.079f
+				   && s->player.vel_y < -0.079f) {
+					s->player.fall_y = s->player.y;
+				}
+				if(s->player.old_vel_y < -0.079f
+				   && s->player.vel_y >= -0.079f) {
+					int fall_distance = s->player.fall_y - s->player.y;
+					if(fall_distance >= 4) {
+						server_local_set_player_health(
+							s,
+							s->player.health
+								- (HEALTH_PER_HEART / 2) * (fall_distance - 3));
+					}
+					s->player.fall_y = s->player.y;
+				}
 				s->player.has_pos = true;
 			}
 			break;
@@ -697,21 +719,11 @@ static void server_local_update(struct server_local* s) {
 		if(blk.type == BLOCK_LAVA_STILL || blk.type == BLOCK_LAVA_FLOW) in_lava = true;
 	}
 
-	// check if player is falling
-	// reset falling height if player is underwater
-	if((s->player.old_vel_y >= -0.079f && s->player.vel_y < -0.079f) || in_water) {
+	/* Fall start/land edges are handled in the PLAYER_POS message handler;
+	   here we only reset the tracked height while the player is in water,
+	   so a drop into water doesn't count as a damaging fall. */
+	if(in_water)
 		s->player.fall_y = s->player.y;
-	}
-	if(s->player.old_vel_y < -0.079f && s->player.vel_y >= -0.079f) {
-		int fall_distance = s->player.fall_y - s->player.y;
-		if(fall_distance >= 4) {
-			/* Minecraft Beta fall damage: one half-heart per block above 3.
-			   Previous code dealt a full heart per block, so a 13-block fall
-			   was instakill instead of the correct 23-block threshold. */
-			server_local_set_player_health(s, s->player.health - (HEALTH_PER_HEART / 2) * (fall_distance - 3));
-		}
-		s->player.fall_y = s->player.y;
-	}
 
 	if(in_lava) {
 		// damage player in lava every 8 ticks
