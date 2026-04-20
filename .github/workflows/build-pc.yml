@@ -1,0 +1,90 @@
+name: Build PC (Windows)
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build fCavEX for Windows (x64, MSVC)
+    runs-on: windows-latest
+
+    defaults:
+      run:
+        shell: bash
+
+    env:
+      VCPKG_DEFAULT_TRIPLET: x64-windows-release
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install C/C++ libraries via vcpkg
+        run: |
+          vcpkg install glfw3 glew zlib --triplet x64-windows-release
+          echo "VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT" >> "$GITHUB_ENV"
+
+      - name: Fetch third-party dependencies
+        run: |
+          git clone --depth 1 https://github.com/FliPPeh/cNBT.git         source/cNBT
+          git clone --depth 1 https://github.com/lvandeve/lodepng.git     source/lodepng
+          git clone --depth 1 https://github.com/kgabis/parson.git        source/parson
+          git clone --depth 1 https://github.com/recp/cglm.git            /tmp/cglm
+          git clone --depth 1 https://github.com/P-p-H-d/mlib.git         /tmp/mlib
+          git clone --depth 1 https://github.com/mackron/miniaudio.git    /tmp/miniaudio
+          git clone --depth 1 https://github.com/nothings/stb.git         /tmp/stb
+
+          # cNBT ships several test programs (each with its own main())
+          rm -f source/cNBT/main_test.c source/cNBT/afl_check.c \
+                source/cNBT/check.c      source/cNBT/tests.c
+
+          # Upstream lodepng is distributed as C++ (lodepng.cpp); compile as C
+          mv source/lodepng/lodepng.cpp source/lodepng/lodepng.c
+          find source/lodepng -mindepth 1 -maxdepth 1 \
+            ! -name 'lodepng.c' ! -name 'lodepng.h' -exec rm -rf {} +
+
+          # cglm is header-only; include tree expected at source/cglm/
+          mkdir -p source/cglm
+          cp -r /tmp/cglm/include/cglm/. source/cglm/
+
+          # M*LIB headers are included as <m-lib/m-array.h>; stage into an extra include dir
+          mkdir -p deps/include/m-lib
+          cp /tmp/mlib/m-*.h deps/include/m-lib/
+
+          # miniaudio + stb_vorbis are single-file libs, dropped into the tree
+          mkdir -p source/miniaudio
+          cp /tmp/miniaudio/miniaudio.h source/miniaudio/
+          mkdir -p source/stb
+          cp /tmp/stb/stb_vorbis.c source/stb/
+
+      - name: Configure (CMake + vcpkg toolchain)
+        run: |
+          cmake -S . -B build \
+            -G "Visual Studio 17 2022" -A x64 \
+            -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" \
+            -DVCPKG_TARGET_TRIPLET=x64-windows-release \
+            -DCMAKE_C_FLAGS="/I$(pwd -W)/deps/include"
+
+      - name: Build (Release)
+        run: cmake --build build --config Release --parallel
+
+      - name: Stage Windows package
+        run: |
+          mkdir -p dist/fCavEX
+          cp build/Release/cavex.exe dist/fCavEX/
+          # bundle the DLLs vcpkg emitted alongside the exe
+          cp build/Release/*.dll dist/fCavEX/ 2>/dev/null || true
+          cp config_pc.json       dist/fCavEX/config.json
+          cp -r assets            dist/fCavEX/assets
+          cp README.md LICENSE    dist/fCavEX/ || true
+
+      - name: Upload Windows build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: fCavEX-windows-x64
+          path: dist/fCavEX
+          if-no-files-found: error

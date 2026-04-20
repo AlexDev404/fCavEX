@@ -2,6 +2,8 @@
 /source/cNBT/
 /source/lodepng/
 /source/parson/
+/source/miniaudio/
+/source/stb/
 /build/
 *.elf
 *.dol

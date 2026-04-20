@@ -28,6 +28,16 @@ jobs:
           git clone --depth 1 https://github.com/kgabis/parson.git        source/parson
           git clone --depth 1 https://github.com/recp/cglm.git            /tmp/cglm
           git clone --depth 1 https://github.com/P-p-H-d/mlib.git         /tmp/mlib
+          git clone --depth 1 https://github.com/mackron/miniaudio.git    /tmp/miniaudio
+          git clone --depth 1 https://github.com/nothings/stb.git         /tmp/stb
+
+          # miniaudio is a single-header lib; copy just the header in
+          mkdir -p source/miniaudio
+          cp /tmp/miniaudio/miniaudio.h source/miniaudio/
+
+          # stb_vorbis ships as a single .c file in the stb repo
+          mkdir -p source/stb
+          cp /tmp/stb/stb_vorbis.c source/stb/
 
           # cNBT ships several test programs (each with its own main()) alongside the library sources
           rm -f source/cNBT/main_test.c source/cNBT/afl_check.c \

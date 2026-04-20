@@ -21,6 +21,7 @@
 #include "../game/game_state.h"
 #include "../particle.h"
 #include "../platform/thread.h"
+#include "../sound/sound.h"
 #include "server_interface.h"
 
 #define RPC_INBOX_SIZE 16
@@ -191,10 +192,12 @@ void clin_process(struct client_rpc* call) {
 						screen_set(&screen_furnace);
 						break;
 					case WINDOW_TYPE_CHEST:
+						sound_play_ui("random.chestopen");
 						screen_chest_set_windowc(window);
 						screen_set(&screen_chest);
 						break;
 					case WINDOW_TYPE_IRON_CHEST:
+						sound_play_ui("random.chestopen");
 						screen_iron_chest_set_windowc(window);
 						screen_set(&screen_iron_chest);
 						break;
@@ -211,11 +214,16 @@ void clin_process(struct client_rpc* call) {
 			gstate.world_time = call->payload.time_set;
 			gstate.world_time_start = time_get();
 			break;
-		case CRPC_SET_BLOCK:
-			if(call->payload.set_block.block.type == BLOCK_AIR) {
-				struct block_data blk = world_get_block(
-					&gstate.world, call->payload.set_block.x,
-					call->payload.set_block.y, call->payload.set_block.z);
+		case CRPC_SET_BLOCK: {
+			struct block_data prev = world_get_block(
+				&gstate.world, call->payload.set_block.x,
+				call->payload.set_block.y, call->payload.set_block.z);
+			uint8_t new_type = call->payload.set_block.block.type;
+			float sx = call->payload.set_block.x + 0.5f;
+			float sy = call->payload.set_block.y + 0.5f;
+			float sz = call->payload.set_block.z + 0.5f;
+
+			if(new_type == BLOCK_AIR) {
 				struct block_data neighbours[6];
 
 				for(int k = 0; k < SIDE_MAX; k++) {
@@ -229,12 +237,27 @@ void clin_process(struct client_rpc* call) {
 				}
 
 				particle_generate_block(&(struct block_info) {
-					.block = &blk,
+					.block = &prev,
 					.neighbours = neighbours,
 					.x = call->payload.set_block.x,
 					.y = call->payload.set_block.y,
 					.z = call->payload.set_block.z,
 				});
+
+				if(prev.type != BLOCK_AIR)
+					sound_play_block_break(prev.type, sx, sy, sz);
+			} else if(prev.type == BLOCK_AIR) {
+				sound_play_block_place(new_type, sx, sy, sz);
+			} else if(prev.type == new_type
+					  && prev.metadata != call->payload.set_block.block.metadata
+					  && (new_type == BLOCK_DOOR_WOOD
+						  || new_type == BLOCK_DOOR_IRON
+						  || new_type == BLOCK_TRAP_DOOR)) {
+				/* door/trapdoor toggled: metadata bit 2 = open */
+				bool now_open
+					= call->payload.set_block.block.metadata & 0x4;
+				sound_play(now_open ? "random.door_open" : "random.door_close",
+						   sx, sy, sz);
 			}
 
 			world_set_block(&gstate.world, call->payload.set_block.x,
@@ -243,6 +266,7 @@ void clin_process(struct client_rpc* call) {
 							call->payload.set_block.block, true);
 
 			break;
+		}
 		case CRPC_SPAWN_ITEM: {
 			struct entity** e_ptr = dict_entity_safe_get(
 				gstate.entities, call->payload.spawn_item.entity_id);
@@ -292,6 +316,7 @@ void clin_process(struct client_rpc* call) {
 										  gstate.camera.y - 0.2F,
 										  gstate.camera.z},
 								  e->network_pos);
+				sound_play_ui("random.pop");
 			}
 		} break;
 		case CRPC_ENTITY_DESTROY:
@@ -307,7 +332,13 @@ void clin_process(struct client_rpc* call) {
 				glm_vec3_copy(call->payload.entity_move.pos, e->network_pos);
 		} break;
 		case CRPC_PLAYER_SET_HEALTH:
-			if (gstate.local_player) gstate.local_player->health = call->payload.player_set_health.health;
+			if(gstate.local_player) {
+				int16_t old_hp = gstate.local_player->health;
+				int16_t new_hp = call->payload.player_set_health.health;
+				gstate.local_player->health = new_hp;
+				if(new_hp < old_hp)
+					sound_play_ui("damage.hit");
+			}
 		break;
 	}
 }

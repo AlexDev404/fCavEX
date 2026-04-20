@@ -21,7 +21,7 @@ I took yyy257's fork and decided to continue the work he's done, and add more fe
 ---
 
 **Planned features** *(in no particular order, not complete)*
-* Sounds
+* ~~Sounds~~ — implemented on PC via resource-pack `sounds.json` at `assets/minecraft/sounds.json` (Wii backend pending)
 * Block gravity: sand and gravel drop down when there's nothing underneath them to support
 * Water/lava flow: once a brick has been removed next to, or underneath a liquid, it will flow there
 * Additional controller support

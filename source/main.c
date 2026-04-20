@@ -44,6 +44,7 @@
 #include "particle.h"
 #include "platform/gfx.h"
 #include "platform/input.h"
+#include "sound/sound.h"
 #include "world.h"
 
 #include "cNBT/nbt.h"
@@ -98,6 +99,7 @@ int main(void) {
 	svin_init();
 	chunk_mesher_init();
 	particle_init();
+	sound_init();
 
 	dict_entity_init(gstate.entities);
 	gstate.local_player = NULL;
@@ -167,6 +169,9 @@ int main(void) {
 		}
 
 		camera_update(&gstate.camera, gstate.in_water);
+
+		sound_set_listener(gstate.camera.x, gstate.camera.y, gstate.camera.z,
+						   sinf(gstate.camera.rx), 0.0f, cosf(gstate.camera.rx));
 
 		if(render_world) {
 			world_pre_render(&gstate.world, &gstate.camera, gstate.camera.view);
@@ -319,5 +324,6 @@ int main(void) {
 		gfx_finish(true);
 	}
 
+	sound_destroy();
 	return 0;
 }

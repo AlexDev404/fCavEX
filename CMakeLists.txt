@@ -167,6 +167,9 @@ add_executable(cavex
 				source/lodepng/lodepng.c
 
 				source/parson/parson.c
+
+				source/sound/sound.c
+				source/platform/sound.c
 			)
 
 target_compile_definitions(cavex PRIVATE PLATFORM_PC CGLM_ALL_UNALIGNED)
@@ -179,3 +182,8 @@ set_target_properties(
 set_property(TARGET cavex PROPERTY INTERPROCEDURAL_OPTIMIZATION True)
 
 target_link_libraries(cavex ${CMAKE_THREAD_LIBS_INIT} ZLIB::ZLIB glfw GLEW::GLEW OpenGL::GL m)
+
+# miniaudio needs dl/pthread on unix; on Windows the required libs are auto-linked via #pragma comment.
+if(UNIX AND NOT APPLE)
+	target_link_libraries(cavex ${CMAKE_DL_LIBS})
+endif()
