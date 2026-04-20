@@ -556,17 +556,25 @@ sprintf(str, "time: %.0f (%.0f)  angle: %.3f", time, day_ticks, angle);
 							  gstate.windows[WINDOWC_INVENTORY])),
 				  height - (GFX_GUI_SCALE * 16) * 8 / 5 - 23 * GFX_GUI_SCALE, 208, 0, 24, 24, 24 * GFX_GUI_SCALE, 24 * GFX_GUI_SCALE);
 
-	for(int k = 0; k < MAX_PLAYER_HEALTH/HEALTH_PER_HEART; k++) {
-		// draw black hearts
-		gutil_texquad((width - 182 * GFX_GUI_SCALE) / 2 + k * 8 * GFX_GUI_SCALE,
-				  height - (GFX_GUI_SCALE * 16) * 8 / 5 - (22 + 10) * GFX_GUI_SCALE, 16, 229, 9, 9, 9 * GFX_GUI_SCALE,
-					  9 * GFX_GUI_SCALE);
-	}
-	for(int k = 0; k < (gstate.local_player->health/HEALTH_PER_HEART); k++) {
-		// draw red hearts
-		gutil_texquad((width - 182 * GFX_GUI_SCALE) / 2 + k * 8 * GFX_GUI_SCALE,
-					  height - (GFX_GUI_SCALE * 16) * 8 / 5 - (22 + 10) * GFX_GUI_SCALE, 52, 229, 9, 9, 9 * GFX_GUI_SCALE,
-				  9 * GFX_GUI_SCALE);
+	int heart_y = height - (GFX_GUI_SCALE * 16) * 8 / 5 - (22 + 10) * GFX_GUI_SCALE;
+	int heart_count = MAX_PLAYER_HEALTH / HEALTH_PER_HEART;
+	int hp = gstate.local_player->health;
+	for(int k = 0; k < heart_count; k++) {
+		int x = (width - 182 * GFX_GUI_SCALE) / 2 + k * 8 * GFX_GUI_SCALE;
+		// background (empty) heart
+		gutil_texquad(x, heart_y, 16, 229, 9, 9,
+					  9 * GFX_GUI_SCALE, 9 * GFX_GUI_SCALE);
+		/* Each heart covers HEALTH_PER_HEART health; a half-heart is the
+		   lower HEALTH_PER_HEART/2 of that range. Full/half/empty chosen
+		   from the vanilla icons sheet (full at u=52, half at u=61). */
+		int heart_hp = hp - k * HEALTH_PER_HEART;
+		if(heart_hp >= HEALTH_PER_HEART) {
+			gutil_texquad(x, heart_y, 52, 229, 9, 9,
+						  9 * GFX_GUI_SCALE, 9 * GFX_GUI_SCALE);
+		} else if(heart_hp >= HEALTH_PER_HEART / 2) {
+			gutil_texquad(x, heart_y, 61, 229, 9, 9,
+						  9 * GFX_GUI_SCALE, 9 * GFX_GUI_SCALE);
+		}
 	}
 
 	// draw oxygen bar if underwater
