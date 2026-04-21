@@ -61,6 +61,31 @@ static uint8_t getTextureIndex3(struct block_info* this, enum side side) {
 	return tex_atlas_lookup(TEXAT_REDSTONE_TORCH_LIT);
 }
 
+static void onNeighbourBlockChange(struct server_local* s,
+								   struct block_info* info) {
+	int sx = info->x, sy = info->y, sz = info->z;
+
+	switch(info->block->metadata) {
+		case 1: sx -= 1; break;
+		case 2: sx += 1; break;
+		case 3: sz -= 1; break;
+		case 4: sz += 1; break;
+		default: sy -= 1; break;
+	}
+
+	struct block_data support;
+	if(!server_world_get_block(&s->world, sx, sy, sz, &support))
+		return;
+
+	if(blocks[support.type] && !blocks[support.type]->can_see_through)
+		return;
+
+	server_local_spawn_block_drops(s, info);
+	server_world_set_block(s, info->x, info->y, info->z,
+						   (struct block_data) {.type = 0});
+	notifyNeighbours(s, info->x, info->y, info->z);
+}
+
 static bool onItemPlace(struct server_local* s, struct item_data* it,
 						struct block_info* where, struct block_info* on,
 						enum side on_side) {
@@ -157,6 +182,7 @@ struct block block_torch = {
 	.onRandomTick = NULL,
 	.onWorldTick = onWorldTick,
 	.onRightClick = NULL,
+	.onNeighbourBlockChange = onNeighbourBlockChange,
 	.transparent = false,
 	.renderBlock = render_block_torch,
 	.renderBlockAlways = NULL,
@@ -192,6 +218,7 @@ struct block block_redstone_torch = {
 	.onWorldTick = onWorldTick,
 	.onRandomTick = NULL,
 	.onRightClick = NULL,
+	.onNeighbourBlockChange = onNeighbourBlockChange,
 	.transparent = false,
 	.renderBlock = render_block_torch,
 	.renderBlockAlways = NULL,
@@ -227,6 +254,7 @@ struct block block_redstone_torch_lit = {
 	.onRandomTick = NULL,
 	.onRightClick = NULL,
 	.onWorldTick = onWorldTick,
+	.onNeighbourBlockChange = onNeighbourBlockChange,
 	.transparent = false,
 	.renderBlock = render_block_torch,
 	.renderBlockAlways = NULL,

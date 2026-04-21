@@ -260,6 +260,11 @@ static uint32_t input_wpad_translate(int key) {
 
 void input_native_key_status(int key, bool* pressed, bool* released,
 							 bool* held) {
+	*pressed = *released = *held = false;
+
+	if(key < 0 || (key > 308 && (key < 900 || key >= 924)))
+		return;
+
 	if(key >= 900 && key < 924) {
 		int js = (key - 900) / 10;
 		int offset = (key - 900) % 10;

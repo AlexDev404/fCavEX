@@ -24,6 +24,7 @@
 
 #include "../cglm/cglm.h"
 
+#include "../block/blocks.h"
 #include "../item/window_container.h"
 #include "../platform/thread.h"
 #include "client_interface.h"
@@ -367,6 +368,10 @@ static void server_local_process(struct server_rpc* call, void* user) {
 											   .type = BLOCK_AIR,
 											   .metadata = 0,
 										   });
+
+					notifyNeighbours(s, call->payload.block_dig.x,
+									 call->payload.block_dig.y,
+									 call->payload.block_dig.z);
 
 					struct item_data it_data;
 					bool has_tool = inventory_get_hotbar_item(
